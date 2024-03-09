@@ -1,0 +1,57 @@
+# gm_unrequire
+C++ implementation of `unrequire` for GMod because its Lua variant doesn't work properly due to the removal of [debug.getregistry](https://wiki.facepunch.com/gmod/debug.getregistry)
+
+<details>
+<summary>
+	Lua variant
+</summary>
+
+```lua
+local is_windows = system.IsWindows()
+local is_linux = system.IsLinux()
+local is_osx = system.IsOSX()
+local is_x64 = jit.arch == "x64"
+
+local dll_prefix = CLIENT and "gmcl" or "gmsv"
+local dll_suffix = assert(
+    (is_windows and (is_x64 and "win64" or "win32")) or
+    (is_linux and (is_x64 and "linux64" or "linux")) or
+    (is_osx and (is_x64 and "osx64" or "osx"))
+)
+
+-- metaman (danielga) unrequire
+do
+    local _MODULES = _MODULES
+    local package_loaded = package.loaded
+    local _R = debug.getregistry()
+    local _LOADLIB = _R._LOADLIB
+
+    local separator = is_windows and "\\" or "/"
+
+    local fmt = string.format(
+        "^LOADLIB: .+%sgarrysmod%slua%sbin%s%s_%%s_%s.dll$",
+        separator,
+        separator,
+        separator,
+        separator,
+        dll_prefix,
+        dll_suffix
+    )
+
+    function unrequire(name)
+        _MODULES[name] = nil
+        package_loaded[name] = nil
+
+        local loadlib = string.format(fmt, name)
+        for name, mod in pairs(_R) do
+            if type(name) == "string" and string.find(name, loadlib) then
+                _LOADLIB.__gc(mod)
+                _R[name] = nil
+                break
+            end
+        end
+    end
+end
+```
+
+</details>

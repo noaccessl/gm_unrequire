@@ -1,0 +1,4 @@
+[submodule "garrysmod_common"]
+	path = garrysmod_common
+	url = https://github.com/dankmolot/garrysmod_common
+	branch = master-cmake
